@@ -4,7 +4,7 @@ import nibabel as nib
 import scipy.ndimage as ndimage
 from skimage.morphology import ball, binary_closing, remove_small_objects, binary_dilation, binary_erosion, disk
 
-def preprocess(bone_mask):
+def preprocess_mask(bone_mask):
     """
     Preprocess a binary bone mask to remove noise, fill holes, 
     and separate femur and tibia by removing the connecting slice.
@@ -74,7 +74,7 @@ def fill_hole_component_1(component_1):
     
     return mask
 
-def fill_hole_component_2(component_2):
+def connect_edges_component_2(component_2):
     """
     Fill internal holes in a 3D binary mask along selected planes.
 
@@ -90,14 +90,14 @@ def fill_hole_component_2(component_2):
     for z in range(mask.shape[2]):
         slice_2d = mask[:, :, z] 
 
-    # Apply mild dilation to connect broken rim
-    dilated = ndimage.binary_dilation(slice_2d, structure=disk(1), iterations=3)
-    eroded = ndimage.binary_erosion(dilated, structure=disk(1), iterations=1)
-    # Fill enclosed holes
-    filled = ndimage.binary_fill_holes(dilated)
+        # Apply mild dilation to connect broken rim
+        dilated = ndimage.binary_dilation(slice_2d, structure=disk(1), iterations=3)
+        eroded = ndimage.binary_erosion(dilated, structure=disk(1), iterations=1)
+        # Fill enclosed holes
+        filled = ndimage.binary_fill_holes(dilated)
 
-    mask[:, :, z] = filled
-        
+        mask[:, :, z] = filled
+            
     return mask
 
 def fill_and_smooth(component_2):
@@ -166,7 +166,7 @@ def combine_mask(component_1, component_2):
     combined_mask = component_1 | component_2
     return combined_mask
 
-def get_labelled_components(combined_mask):
+def get_labelled_mask(combined_mask):
     
     labeled_mask, num_components = ndimage.label(combined_mask)
 
@@ -192,8 +192,8 @@ def get_labelled_components(combined_mask):
 
     # Step 5: Create labeled mask: 1 = femur, 2 = tibia
     final_mask = np.zeros_like(labeled_mask, dtype=np.uint8)
-    final_mask[labeled_mask == tibia_label] = 1
-    final_mask[labeled_mask == femur_label] = 2
+    final_mask[labeled_mask == tibia_label] = 2
+    final_mask[labeled_mask == femur_label] = 1
     
     return final_mask
 

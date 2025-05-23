@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import nibabel as nib
+from pathlib import Path
 
 def load_nifti(path_to_data):
     """
@@ -67,6 +68,6 @@ def plot_slices(data):
 def save_file(final_mask, original_image_vol, file_name):
     labelled_mask = final_mask.astype(np.uint8)  # NIfTI format expects int types
     nii_mask = nib.Nifti1Image(labelled_mask, affine=original_image_vol.affine)
-    nib.save(nii_mask, "results"/file_name)
+    nib.save(nii_mask, Path("results")/file_name)
 
     
